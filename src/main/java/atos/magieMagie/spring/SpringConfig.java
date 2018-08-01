@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package streaming.spring;
+package atos.magieMagie.spring;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -22,8 +22,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Configuration
 //@SpringBootApplication
 //@EnableAutoConfiguration
-@ComponentScan(basePackages = "streaming") 
-@EnableJpaRepositories(basePackages = "streaming")
+@ComponentScan(basePackages = "atos.magieMagie") 
+@EnableJpaRepositories(basePackages = "atos.magieMagie")
 @EnableScheduling
 public class SpringConfig {
 
@@ -36,7 +36,7 @@ public class SpringConfig {
 
     @Bean
     public EntityManagerFactory entityManagerFactory() {
-        return Persistence.createEntityManagerFactory("streaming_PU");
+        return Persistence.createEntityManagerFactory("PU");
     }
 
 }
