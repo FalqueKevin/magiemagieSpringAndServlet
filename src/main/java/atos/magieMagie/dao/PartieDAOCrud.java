@@ -27,5 +27,12 @@ public interface PartieDAOCrud extends CrudRepository<Partie, Long>{
             + "WHERE j.etatJoueur=atos.magieMagie.entity.Joueur.etat.GAGNANT"
             + " OR j.etatJoueur=atos.magieMagie.entity.Joueur.etat.A_LA_MAIN")
     public List<Partie> listerPartieNonDemarrees();
+
+    @Query("SELECT j "
+            + "FROM Joueur j "
+            + "JOIN j.partie p "
+            + "WHERE p.id =?1 "
+            + "AND j.etatJoueur =atos.magieMagie.entity.Joueur.etat.A_LA_MAIN")
+    public Joueur rechercheJoueurQuiALaMainParPartieID(Long partieID);
     
 }

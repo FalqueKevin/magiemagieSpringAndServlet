@@ -7,6 +7,7 @@ package atos.magieMagie.service;
 
 import atos.magieMagie.dao.CarteDAO;
 import atos.magieMagie.dao.CarteDAOCrud;
+import atos.magieMagie.dao.JoueurDAOCrud;
 import atos.magieMagie.entity.Carte;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,17 +18,10 @@ public class CarteService {
     
     @Autowired
     private CarteDAOCrud carteDAOCrud;
-    private CarteDAO carteDAO = new CarteDAO();
     
     public Carte rechercherUneCarteParID(Long carteID) {
         
         return carteDAOCrud.findOne(carteID);
-        
-    }
-    
-    public List<Carte> rechercherCartesParID(Long id) {
-        
-        return carteDAO.rechercherCartesParID(id);
         
     }
     

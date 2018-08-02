@@ -46,7 +46,7 @@ public class Main {
                 System.out.println("********************************************");
                 System.out.println("*** Vous êtes le joueur : " + joueurActuel.getPseudo());
                 System.out.println("*** Vos cartes :                         ***");
-                List<Carte> cartesDuJoueur = carteDAO.rechercherCartesParID(joueurActuel.getId());
+                List<Carte> cartesDuJoueur = joueurDAO.rechercherCartesParID(joueurActuel.getId());
                 for(Carte c : cartesDuJoueur){
                     System.out.println(c.getIngredient() + " ( ID : " + c.getId() + " )");
                 }

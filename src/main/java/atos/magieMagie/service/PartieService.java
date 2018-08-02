@@ -36,10 +36,8 @@ public class PartieService {
     private PartieDAO partieDAO = new PartieDAO();
     @Autowired
     private JoueurDAOCrud joueurDAOCrud;
-    private JoueurDAO joueurDAO = new JoueurDAO();
     @Autowired
     private CarteDAOCrud carteDAOCrud;
-    private CarteDAO carteDAO = new CarteDAO();
     
     public List<Partie> listerPartieNonDemarrees(){
         
@@ -91,7 +89,7 @@ public class PartieService {
     
     public void passerTour(Long partieID, Long joueurID){
         
-        Joueur j = joueurDAO.rechercherParID(joueurID);
+        Joueur j = joueurDAOCrud.findOne(joueurID);
         this.distribuerUneCarteAleatoire(joueurID);
         this.passerLaMainAuJoueurSuivant(partieID, joueurID);
         
@@ -102,44 +100,57 @@ public class PartieService {
         if (partieDAO.rechercheJoueurGagnant(partieID) != null){
             return partieDAO.rechercheJoueurGagnant(partieID);
         }
-        Joueur j = joueurDAO.rechercherParID(joueurActuel);
+        Joueur j = joueurDAOCrud.findOne(joueurActuel);
         if (j.getEtatJoueur() != Joueur.etat.PERDU){
             j.setEtatJoueur(Joueur.etat.N_A_PAS_LA_MAIN);
-            joueurDAO.modifier(j);
+            joueurDAOCrud.save(j);
         }
-        Joueur joueurSuivant = joueurDAO.rechercherJoueurSuivant(partieID, j.getOrdre());
+        Joueur joueurSuivant = new Joueur();
+        try {
+        joueurSuivant = joueurDAOCrud.rechercherJoueurSuivant(partieID, j.getOrdre()+1L);
+        }catch (Exception e){
+            joueurSuivant = joueurDAOCrud.rechercherJoueurSuivant(partieID, 1L);
+        }    
         while (joueurSuivant.getEtatJoueur() != Joueur.etat.N_A_PAS_LA_MAIN){
             if (joueurSuivant.getEtatJoueur() == Joueur.etat.SOMMEIL_PROFOND){
                 joueurSuivant.setEtatJoueur(Joueur.etat.N_A_PAS_LA_MAIN);
-                joueurDAO.modifier(joueurSuivant);
-                joueurSuivant = joueurDAO.rechercherJoueurSuivant(partieID, joueurSuivant.getOrdre());
+                joueurDAOCrud.save(joueurSuivant);
+                try {
+                joueurSuivant = joueurDAOCrud.rechercherJoueurSuivant(partieID, joueurSuivant.getOrdre()+1L);
+                }catch (Exception e) {
+                    joueurSuivant = joueurDAOCrud.rechercherJoueurSuivant(partieID, 1L);
+                }
             }
             else if (joueurSuivant.getEtatJoueur() == Joueur.etat.PERDU){
-                joueurSuivant = joueurDAO.rechercherJoueurSuivant(partieID, joueurSuivant.getOrdre());
+                try {
+                joueurSuivant = joueurDAOCrud.rechercherJoueurSuivant(partieID, joueurSuivant.getOrdre()+1L);
+                }catch (Exception e) {
+                    joueurSuivant = joueurDAOCrud.rechercherJoueurSuivant(partieID, 1L);
+                }
             }else if (joueurSuivant.getEtatJoueur() == Joueur.etat.A_LA_MAIN){
                 break;
             }
         }
         joueurSuivant.setEtatJoueur(Joueur.etat.A_LA_MAIN);
-        joueurDAO.modifier(joueurSuivant);
+        joueurDAOCrud.save(joueurSuivant);
         return null;
     }
     
     public List<Joueur> rechercherJoueursParID(Long partieID){
         
-        return partieDAO.rechercherJoueursParID(partieID);
+        return joueurDAOCrud.findByPartieId(partieID);
         
     }
 
     public String rechercherNomParID(Long idPartie) {
 
-        return partieDAO.rechercherParID(idPartie).getNom();
+        return partieDAOCrud.findOne(idPartie).getNom();
 
     }
     
     public Joueur rechercheJoueurQuiALaMainParPartieID(Long partieID){
         
-        return partieDAO.rechercheJoueurQuiALaMainParPartieID(partieID);
+        return partieDAOCrud.rechercheJoueurQuiALaMainParPartieID(partieID);
         
     }
 

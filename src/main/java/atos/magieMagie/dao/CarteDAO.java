@@ -51,14 +51,5 @@ public class CarteDAO {
         return em.find(Carte.class, carteID);
         
     }
-
-    public List<Carte> rechercherCartesParID(Long id) {
-        
-        EntityManager em = Persistence.createEntityManagerFactory("PU").createEntityManager();
-        Query query = em.createQuery("SELECT j.cartes FROM Joueur j WHERE j.id =:ID");
-        query.setParameter("ID", id);
-        return query.getResultList();
-        
-    }
     
 }

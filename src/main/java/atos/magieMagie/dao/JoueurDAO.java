@@ -40,8 +40,6 @@ public class JoueurDAO {
         EntityManager em = Persistence.createEntityManagerFactory("PU").createEntityManager();
         Query query = em.createQuery("SELECT MAX(j.ordre) FROM Joueur j JOIN j.partie p WHERE p.id =:IDP");
         query.setParameter("IDP", partieID);
-        if (query.getSingleResult()==null)
-            return 1L;
         return (Long)query.getSingleResult()+1L;
     }
 
@@ -75,11 +73,19 @@ public class JoueurDAO {
             Query query = em.createQuery("SELECT j FROM Joueur j JOIN Partie p WHERE j.ordre =:ordre AND p.id =:ID");
             query.setParameter("ordre", ordreJoueurActuel + 1L);
             query.setParameter("ID", partieID);
-            Joueur j = (Joueur)query.getSingleResult();
-            return j;
+            return (Joueur)query.getSingleResult();
         }catch (Exception e){
             return rechercherJoueurSuivant(partieID, 0L);
         }    
+    }
+    
+    public List<Carte> rechercherCartesParID(Long id) {
+
+        EntityManager em = Persistence.createEntityManagerFactory("PU").createEntityManager();
+        Query query = em.createQuery("SELECT j.cartes FROM Joueur j WHERE j.id =:ID");
+        query.setParameter("ID", id);
+        return query.getResultList();
+        
     }
     
 }

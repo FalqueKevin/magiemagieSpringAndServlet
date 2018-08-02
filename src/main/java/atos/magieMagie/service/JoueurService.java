@@ -29,18 +29,15 @@ public class JoueurService {
     
     @Autowired
     private PartieDAOCrud partieDAOCrud;
-    private PartieDAO partieDAO = new PartieDAO();
     @Autowired
     private JoueurDAOCrud joueurDAOCrud;
-    private JoueurDAO joueurDAO = new JoueurDAO();
     @Autowired
     private CarteDAOCrud carteDAOCrud;
-    private CarteDAO carteDAO = new CarteDAO();
     
     public Joueur rejoindrePartie(String nomJoueur, String avatar, Long partieID){
         
         // Recherche si le joueur existe déjà
-        Joueur j = joueurDAO.rechercherParPseudo(nomJoueur);
+        Joueur j = joueurDAOCrud.findOneByPseudo(nomJoueur);
         
         if (j == null){
             //Le joueur n'existe pas encore
@@ -51,17 +48,16 @@ public class JoueurService {
         }
         j.setAvatar(avatar);
         j.setEtatJoueur(Joueur.etat.N_A_PAS_LA_MAIN);
-        j.setOrdre(joueurDAO.rechercherOrdreNouveauJoueur(partieID));
-        Partie p = partieDAO.rechercherParID(partieID);
+        if (joueurDAOCrud.rechercherOrdreNouveauJoueur(partieID)==null){
+            j.setOrdre(1L);
+        }else{
+            j.setOrdre(joueurDAOCrud.rechercherOrdreNouveauJoueur(partieID));
+        }
+        Partie p = partieDAOCrud.findOne(partieID);
         j.setPartie(p);
         p.getJoueurs().add(j);
         
-        if (j.getId()==null){ //Le joueur n'existe pas encore
-            joueurDAO.ajouter(j);
-        }else { //Le joueur existe déja
-            joueurDAO.modifier(j);
-        }
-        
+        joueurDAOCrud.save(j);
         return j;
         
     }
@@ -69,16 +65,16 @@ public class JoueurService {
     
     public void detruireCartesUtiliseesPourSort(Long idPartie, Long ingredient1, Long ingredient2){
         
-        Carte carteIngredient1 = carteDAO.rechercherUneCarteParID(ingredient1);
-        Carte carteIngredient2 = carteDAO.rechercherUneCarteParID(ingredient2);
-        carteDAO.supprimer(carteIngredient1);
-        carteDAO.supprimer(carteIngredient2);
-        List<Joueur> joueurs = partieDAO.rechercherJoueursParID(idPartie);
+        Carte carteIngredient1 = carteDAOCrud.findOne(ingredient1);
+        Carte carteIngredient2 = carteDAOCrud.findOne(ingredient2);
+        carteDAOCrud.delete(carteIngredient1);
+        carteDAOCrud.delete(carteIngredient2);
+        List<Joueur> joueurs = joueurDAOCrud.findByPartieId(idPartie);
         for(Joueur j : joueurs){
             if (j.getCartes().size()==0){
                 j.setEtatJoueur(Joueur.etat.PERDU);
                 j.setNbPartiesJouees(j.getNbPartiesJouees()+1);
-                joueurDAO.modifier(j);
+                joueurDAOCrud.save(j);
             }
         }
        
@@ -86,29 +82,29 @@ public class JoueurService {
     
     public List<Joueur> sortDivination(Long idPartie) {
 
-        List<Joueur> joueurs = partieDAO.rechercherJoueursParID(idPartie);
+        List<Joueur> joueurs = joueurDAOCrud.findByPartieId(idPartie);
         return joueurs;
 
     }
 
     public void sortSommeilProfond(Long idJoueurVictime) {
 
-        Joueur j = joueurDAO.rechercherParID(idJoueurVictime);
+        Joueur j = joueurDAOCrud.findOne(idJoueurVictime);
         j.setEtatJoueur(Joueur.etat.SOMMEIL_PROFOND);
-        joueurDAO.modifier(j);
+        joueurDAOCrud.save(j);
 
     }
 
     public void sortFiltreAmour(Long idPartie, Long idJoueurLanceur, Long idJoueurVictime) {
         
-        Joueur joueurLanceur = joueurDAO.rechercherParID(idJoueurLanceur);
-        Joueur joueurVictime = joueurDAO.rechercherParID(idJoueurVictime);
+        Joueur joueurLanceur = joueurDAOCrud.findOne(idJoueurLanceur);
+        Joueur joueurVictime = joueurDAOCrud.findOne(idJoueurVictime);
         List<Carte> cartesDuJoueurVictime = joueurVictime.getCartes();
         if (cartesDuJoueurVictime.size()==1){
             joueurVictime.setEtatJoueur(Joueur.etat.PERDU);
             joueurVictime.setNbPartiesJouees(joueurVictime.getNbPartiesJouees()+1);
-            joueurDAO.modifier(joueurVictime);
-            carteDAO.supprimer(cartesDuJoueurVictime.get(0));
+            joueurDAOCrud.save(joueurVictime);
+            carteDAOCrud.delete(cartesDuJoueurVictime.get(0));
             return;
         }
         if(joueurVictime.getCartes().size()>0){
@@ -122,8 +118,8 @@ public class JoueurService {
 
     public void sortInvisibilité(Long idPartie, Long idJoueurLanceur) {
         
-        Joueur joueurLanceur = joueurDAO.rechercherParID(idJoueurLanceur);
-        List<Joueur> joueurs = partieDAO.rechercherParID(idPartie).getJoueurs();
+        Joueur joueurLanceur = joueurDAOCrud.findOne(idJoueurLanceur);
+        List<Joueur> joueurs = partieDAOCrud.findOne(idPartie).getJoueurs();
         for(Joueur joueurVictime : joueurs){
             if (joueurVictime.getCartes().size()>0){
                 this.volerUneCarteAuHasard(joueurLanceur.getId(), joueurVictime.getId());
@@ -134,8 +130,8 @@ public class JoueurService {
 
     public void sortHypnose(Long idPartie, Long IDcarteDonnee, Long IDjoueurLanceur, Long IDjoueurVictime) {
 
-        Joueur joueurLanceur = joueurDAO.rechercherParID(IDjoueurLanceur);
-        Joueur joueurVictime = joueurDAO.rechercherParID(IDjoueurVictime);
+        Joueur joueurLanceur = joueurDAOCrud.findOne(IDjoueurLanceur);
+        Joueur joueurVictime = joueurDAOCrud.findOne(IDjoueurVictime);
         List<Carte> cartesDuJoueurVictime = joueurVictime.getCartes();
         for(int i = 0; i < 3; i++){
             if (cartesDuJoueurVictime.size()>0){
@@ -148,15 +144,15 @@ public class JoueurService {
 
     public void volerUneCarteAuHasard(Long IDjoueurLanceur, Long IDjoueurVictime) {
         
-        Joueur joueurLanceur = joueurDAO.rechercherParID(IDjoueurLanceur);
-        Joueur joueurVictime = joueurDAO.rechercherParID(IDjoueurVictime);     
+        Joueur joueurLanceur = joueurDAOCrud.findOne(IDjoueurLanceur);
+        Joueur joueurVictime = joueurDAOCrud.findOne(IDjoueurVictime);     
         Carte c = new Carte();
         Random r = new Random();
         int n = r.nextInt(joueurVictime.getCartes().size());
         c = (joueurVictime.getCartes().get(n));
         c.setJoueur(joueurLanceur);
         joueurVictime.getCartes().add(c);
-        carteDAO.modifier(c);
+        carteDAOCrud.save(c);
         
     }
 
@@ -166,7 +162,7 @@ public class JoueurService {
         Joueur joueurVictime = joueurDAOCrud.findOne(IDjoueurVictime);
         carteDonnee.setJoueur(joueurVictime);
         joueurVictime.getCartes().add(carteDonnee);
-        carteDAO.modifier(carteDonnee);
+        carteDAOCrud.save(carteDonnee);
 
     }
     
@@ -178,7 +174,7 @@ public class JoueurService {
     
     public Joueur rechercherParPseudo(String pseudo){
         
-        return joueurDAO.rechercherParPseudo(pseudo);
+        return joueurDAOCrud.findOneByPseudo(pseudo);
         
     }
     
